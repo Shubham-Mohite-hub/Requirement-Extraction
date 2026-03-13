@@ -21,10 +21,10 @@ def extract_requirements(text):
     ]
 
     priority_words = ["urgent", "high priority", "critical", "important", "asap"]
-    timeline_words = ["week", "month", "sprint", "deadline", "tomorrow", "upcoming release"]
+    
+    # We keep the keywords but NER will handle specific dates like "Friday"
+    timeline_keywords = ["sprint", "deadline", "upcoming release", "asap"]
 
-    # IMPROVEMENT 3: Use spaCy for intelligent sentence splitting
-    # This prevents cutting requirements in half at the wrong place.
     doc_full = nlp(text)
 
     for sent in doc_full.sents:
@@ -34,38 +34,50 @@ def extract_requirements(text):
 
         lower_s = s.lower()
         
-        # -------- Functional Requirements --------
-        # Check for Modal Verbs (MD) like "shall", "must", "should"
+        # 1. -------- Functional vs Non-Functional --------
         has_modal = any(token.tag_ == "MD" for token in sent)
-        if has_modal:
-            # Exclude if it sounds like a Non-Functional req
-            if not any(word in lower_s for word in ["secure", "performance", "scalable", "protect"]):
-                result["Functional Requirements"].append(s)
-
-        # -------- Non Functional Requirements --------
-        if any(word in lower_s for word in ["performance", "secure", "scalable", "encryption", "speed"]):
+        is_nfr = any(word in lower_s for word in ["performance", "secure", "scalable", "encryption", "speed"])
+        
+        if is_nfr:
             result["Non Functional Requirements"].append(s)
+        elif has_modal:
+            result["Functional Requirements"].append(s)
 
-        # -------- Stakeholder Roles Only --------
+        # 2. -------- Stakeholders (Roles + NER for Names) --------
+        # Catch Roles
         for role in stakeholder_roles:
             if role in lower_s:
                 role_name = role.title()
-                # Deduplication logic
-                if role_name == "Manager" and "Product Manager" in result["Stakeholders"]:
-                    continue
                 if role_name not in result["Stakeholders"]:
                     result["Stakeholders"].append(role_name)
+        
+        # Catch Actual Names using NER
+        for ent in sent.ents:
+            if ent.label_ == "PERSON":
+                name = ent.text.strip()
+                if name not in result["Stakeholders"] and len(name) > 2:
+                    result["Stakeholders"].append(name)
 
-        # -------- Decisions --------
+        # 3. -------- Decisions --------
         if any(word in lower_s for word in ["approved", "decided", "confirmed", "agreed"]):
             result["Decisions"].append(s)
 
-        # -------- Timeline --------
-        if any(word in lower_s for word in timeline_words):
+        # 4. -------- Timelines (Keywords + NER for Dates) --------
+        # Catch Keywords
+        has_time_keyword = any(word in lower_s for word in timeline_keywords)
+        
+        # Catch Specific Dates/Times using NER (e.g., "next Friday", "tomorrow")
+        has_date_ent = any(ent.label_ in ["DATE", "TIME"] for ent in sent.ents)
+        
+        if has_time_keyword or has_date_ent:
             result["Timelines"].append(s)
 
-        # -------- Feature Priority --------
+        # 5. -------- Feature Priority --------
         if any(word in lower_s for word in priority_words):
             result["Feature Priority"].append(s)
+
+    # Clean up: Remove duplicates across all lists
+    for key in result:
+        result[key] = list(set(result[key]))
 
     return result
