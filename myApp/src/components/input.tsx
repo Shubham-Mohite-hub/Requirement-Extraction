@@ -22,6 +22,7 @@ const SourceTypeCard = ({
   selected,
   onClick,
 }: {
+  
   icon: any;
   title: string;
   subtitle: string;
@@ -81,13 +82,13 @@ const PipelineStep = ({
   );
 };
 
-export default function App({ onExtract }) {
+
+export default function InputPage({ onExtract }) {
   const [sourceType, setSourceType] = useState('email');
   const [activeTab, setActiveTab] = useState('paste');
+  const [text, setText] = useState('');
   const navigate = useNavigate();
-  const handleAnalysis = () => {
-    navigate("/output");
-  };
+ 
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0c0a14] text-slate-100 font-sans">
@@ -184,7 +185,8 @@ export default function App({ onExtract }) {
               {/* Tab Content */}
               <div className="p-6">
                 {activeTab === 'paste' ? (
-                  <textarea
+                  <textarea value={text}
+  onChange={(e) => setText(e.target.value)}
                     className="w-full h-64 bg-[#1c192b] border border-[#4729e0]/20 rounded-lg p-4 text-sm text-slate-200 focus:ring-2 focus:ring-[#4729e0] focus:border-[#4729e0] transition-all resize-none outline-none"
                     placeholder="Paste your communication transcript, email thread, or meeting notes here..."
                   ></textarea>
@@ -206,11 +208,14 @@ export default function App({ onExtract }) {
 
           {/* Action Button */}
           <div className="flex flex-col items-center justify-center py-4">
-            <button className="group flex items-center gap-3 px-10 py-4 bg-[#4729e0] text-white rounded-full font-bold text-lg shadow-2xl shadow-[#4729e0]/40 hover:scale-[1.02] active:scale-[0.98] transition-all" onClick={onExtract}>
-              <Sparkles className="w-5 h-5 fill-current" />
-              Extract Requirements
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
+            <button 
+      className="..." 
+      onClick={() => onExtract(text, sourceType)} // Fixed syntax
+    >
+      <Sparkles className="w-5 h-5 fill-current" />
+      Extract Requirements
+      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+    </button>
             <p className="mt-4 text-xs text-slate-400 flex items-center gap-1">
               <Zap className="w-[14px] h-[14px]" />
               AI Engine: spaCy Large Model v3.5
