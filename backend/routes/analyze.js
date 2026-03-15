@@ -42,4 +42,14 @@ router.post('/analyze-requirements', async (req, res) => {
   }
 });
 
+router.get('/history', async (req, res) => {
+  try {
+    const Requirement = require('../models/Requirement'); // Ensure the path is correct
+    const history = await Requirement.find().sort({ createdAt: -1 }); // Newest first
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching history", error: error.message });
+  }
+});
+
 module.exports = router;
