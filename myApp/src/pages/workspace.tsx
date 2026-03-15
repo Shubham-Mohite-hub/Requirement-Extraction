@@ -3,6 +3,7 @@ import Sidebar from "../components/Sidebar";
 import InputPage from "../components/input";
 import RequirementsPanel from "../components/output";
 import HistoryPage from "./History"; 
+import PRDView from "../components/PRDview";
 
 export default function App() {
   const [showRequirements, setShowRequirements] = useState(false);
@@ -41,6 +42,35 @@ export default function App() {
     setCurrentView("dashboard");
   };
 
+  const renderContent = () => {
+    switch (currentView) {
+      case "history":
+        return <HistoryPage onViewItem={handleViewHistoryItem} />;
+      
+      case "dashboard":
+        return analysisData ? (
+          <RequirementsPanel data={analysisData} />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-slate-500">
+            Please extract requirements first.
+          </div>
+        );
+
+      case "prd":
+        return analysisData ? (
+          <PRDView data={analysisData} />
+        ) : (
+          <div className="p-20 text-center text-slate-500">
+            Please extract requirements first to generate a PRD.
+          </div>
+        );
+
+      case "input":
+      default:
+        return <InputPage onExtract={handleExtract} />;
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#141121] text-slate-100 overflow-hidden">
       
@@ -65,6 +95,16 @@ export default function App() {
           if (currentView === "dashboard" && analysisData) {
             return <RequirementsPanel data={analysisData} />;
           }
+          // Inside workspace.tsx switcher logic:
+if (currentView === "prd") {
+  return analysisData ? (
+    <PRDView data={analysisData} />
+  ) : (
+    <div className="p-20 text-center text-slate-500">
+      Please extract requirements first to generate a PRD.
+    </div>
+  );
+}
 
           return <InputPage onExtract={handleExtract} />;
         })()}

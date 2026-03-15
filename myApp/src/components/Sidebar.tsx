@@ -4,7 +4,6 @@ import {
   ArrowRightToLine,
   FileText,
   Users,
-  Gavel,
   Clock,
   Star,
   Network,
@@ -13,7 +12,6 @@ import {
   Settings,
 } from "lucide-react";
 
-// Added props to handle navigation
 interface SidebarProps {
   setView: (view: string) => void;
   currentView: string;
@@ -23,16 +21,15 @@ export default function Sidebar({ setView, currentView }: SidebarProps) {
   const navItems = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { id: "input", icon: ArrowRightToLine, label: "Input Workspace" },
-    { id: "requirements", icon: FileText, label: "Requirements" },
-    { id: "stakeholders", icon: Users, label: "Stakeholders" },
-    { id: "history", icon: Clock, label: "History" }, // This id must match workspace logic
-    { id: "priority", icon: Star, label: "Feature Priority" },
-    { id: "graph", icon: Network, label: "Knowledge Graph" },
+    { id: "history", icon: Clock, label: "History" },
     { id: "prd", icon: BookOpen, label: "PRD Generator" },
+    // These are placeholders for your other features
+    { id: "stakeholders", icon: Users, label: "Stakeholders" },
+    { id: "graph", icon: Network, label: "Knowledge Graph" },
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-[#4729e0]/20 bg-[#141121] flex flex-col h-full shrink-0">
+    <aside className="w-64 flex-shrink-0 border-r border-[#4729e0]/20 bg-[#141121] flex flex-col h-full">
       <div className="p-6">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-8 h-8 bg-[#4729e0] rounded-lg flex items-center justify-center">

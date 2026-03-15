@@ -18,3 +18,5 @@ myApp/dist/
 # OS files
 .DS_Store
 !.env.example
+dist
+
