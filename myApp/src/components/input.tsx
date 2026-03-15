@@ -1,4 +1,3 @@
-/** * @license * SPDX-License-Identifier: Apache-2.0 */ 
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import {
@@ -15,6 +14,7 @@ import {
   ListChecks,
   FileText
 } from "lucide-react";
+
 const SourceTypeCard = ({
   icon: Icon,
   title,
@@ -22,7 +22,6 @@ const SourceTypeCard = ({
   selected,
   onClick,
 }: {
-  
   icon: any;
   title: string;
   subtitle: string;
@@ -69,7 +68,7 @@ const PipelineStep = ({
             : 'bg-[#4729e0]/10 border border-[#4729e0]/20 group-hover:bg-[#4729e0]/20'
         }`}
       >
-        <Icon className={`w-6 h-6 ${isLast ? 'text-[#4729e0]' : 'text-[#4729e0]'}`} />
+        <Icon className={`w-6 h-6 text-[#4729e0]`} />
       </div>
       <span
         className={`text-[10px] font-bold uppercase tracking-tight ${
@@ -82,13 +81,40 @@ const PipelineStep = ({
   );
 };
 
-
-export default function InputPage({ onExtract }) {
+export default function InputPage({ onExtract }: { onExtract: (text: string, type: string) => void }) {
   const [sourceType, setSourceType] = useState('email');
   const [activeTab, setActiveTab] = useState('paste');
   const [text, setText] = useState('');
-  const navigate = useNavigate();
- 
+
+  // Handle Local File Reading
+const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  // 1. Validation
+  if (file.type !== "text/plain" && !file.name.endsWith(".txt")) {
+    alert("Please upload a .txt file for the requirements analysis.");
+    return;
+  }
+
+  const reader = new FileReader();
+  
+  // 2. Define what happens when the file is read
+  reader.onload = (e) => {
+    const content = e.target?.result as string;
+    
+    // Update the local state just in case
+    setText(content); 
+
+    // 3. IMMEDIATE EXTRACTION
+    // This sends the file content to your Node backend immediately
+    onExtract(content, 'document'); 
+    
+    console.log(`🚀 File "${file.name}" uploaded. Starting extraction...`);
+  };
+
+  reader.readAsText(file);
+};
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0c0a14] text-slate-100 font-sans">
@@ -99,8 +125,7 @@ export default function InputPage({ onExtract }) {
               Source Input & Upload
             </h2>
             <p className="mt-2 text-slate-400 max-w-2xl">
-              Convert unstructured communications into precise engineering requirements. Use our
-              spaCy-powered pipeline to extract stakeholders, dates, and core functionality.
+              Convert unstructured communications into precise engineering requirements.
             </p>
           </div>
         </header>
@@ -109,61 +134,30 @@ export default function InputPage({ onExtract }) {
           {/* Step 1: Source Type */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#4729e0]/10 text-[#4729e0] text-xs font-bold">
-                1
-              </span>
+              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#4729e0]/10 text-[#4729e0] text-xs font-bold">1</span>
               <h3 className="text-lg font-bold text-white">Select Source Type</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <SourceTypeCard
-                icon={Mail}
-                title="Email"
-                subtitle="Gmail, Outlook, Logs"
-                selected={sourceType === 'email'}
-                onClick={() => setSourceType('email')}
-              />
-              <SourceTypeCard
-                icon={MessageSquare}
-                title="Chat"
-                subtitle="Slack, Teams, Discord"
-                selected={sourceType === 'chat'}
-                onClick={() => setSourceType('chat')}
-              />
-              <SourceTypeCard
-                icon={Mic}
-                title="Transcript"
-                subtitle="Zoom, Meet, Otter.ai"
-                selected={sourceType === 'transcript'}
-                onClick={() => setSourceType('transcript')}
-              />
-              <SourceTypeCard
-                icon={FileText}
-                title="Document"
-                subtitle="PDF, DOCX, TXT"
-                selected={sourceType === 'document'}
-                onClick={() => setSourceType('document')}
-              />
+              <SourceTypeCard icon={Mail} title="Email" subtitle="Gmail, Outlook" selected={sourceType === 'email'} onClick={() => setSourceType('email')} />
+              <SourceTypeCard icon={MessageSquare} title="Chat" subtitle="Slack, Teams" selected={sourceType === 'chat'} onClick={() => setSourceType('chat')} />
+              <SourceTypeCard icon={Mic} title="Transcript" subtitle="Zoom, Meet" selected={sourceType === 'transcript'} onClick={() => setSourceType('transcript')} />
+              <SourceTypeCard icon={FileText} title="Document" subtitle="TXT Documents" selected={sourceType === 'document'} onClick={() => setSourceType('document')} />
             </div>
           </section>
 
           {/* Step 2: Input Content */}
           <section>
             <div className="flex items-center gap-2 mb-4">
-              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#4729e0]/10 text-[#4729e0] text-xs font-bold">
-                2
-              </span>
+              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-[#4729e0]/10 text-[#4729e0] text-xs font-bold">2</span>
               <h3 className="text-lg font-bold text-white">Input Content</h3>
             </div>
 
             <div className="bg-[#141121] rounded-xl border border-[#4729e0]/10 overflow-hidden shadow-sm">
-              {/* Tabs */}
               <div className="flex border-b border-[#4729e0]/10">
                 <button
                   onClick={() => setActiveTab('paste')}
                   className={`flex-1 py-4 text-sm font-bold border-b-2 flex items-center justify-center gap-2 transition-colors ${
-                    activeTab === 'paste'
-                      ? 'border-[#4729e0] text-[#4729e0]'
-                      : 'border-transparent text-slate-400 hover:bg-[#4729e0]/5'
+                    activeTab === 'paste' ? 'border-[#4729e0] text-[#4729e0]' : 'border-transparent text-slate-400 hover:bg-[#4729e0]/5'
                   }`}
                 >
                   <ClipboardPaste className="w-[18px] h-[18px]" />
@@ -172,9 +166,7 @@ export default function InputPage({ onExtract }) {
                 <button
                   onClick={() => setActiveTab('upload')}
                   className={`flex-1 py-4 text-sm font-bold border-b-2 flex items-center justify-center gap-2 transition-colors ${
-                    activeTab === 'upload'
-                      ? 'border-[#4729e0] text-[#4729e0]'
-                      : 'border-transparent text-slate-400 hover:bg-[#4729e0]/5'
+                    activeTab === 'upload' ? 'border-[#4729e0] text-[#4729e0]' : 'border-transparent text-slate-400 hover:bg-[#4729e0]/5'
                   }`}
                 >
                   <Upload className="w-[18px] h-[18px]" />
@@ -182,23 +174,29 @@ export default function InputPage({ onExtract }) {
                 </button>
               </div>
 
-              {/* Tab Content */}
               <div className="p-6">
                 {activeTab === 'paste' ? (
-                  <textarea value={text}
-  onChange={(e) => setText(e.target.value)}
-                    className="w-full h-64 bg-[#1c192b] border border-[#4729e0]/20 rounded-lg p-4 text-sm text-slate-200 focus:ring-2 focus:ring-[#4729e0] focus:border-[#4729e0] transition-all resize-none outline-none"
-                    placeholder="Paste your communication transcript, email thread, or meeting notes here..."
+                  <textarea 
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    className="w-full h-64 bg-[#1c192b] border border-[#4729e0]/20 rounded-lg p-4 text-sm text-slate-200 focus:ring-2 focus:ring-[#4729e0] outline-none"
+                    placeholder="Paste text here..."
                   ></textarea>
                 ) : (
-                  <div className="border-2 border-dashed border-[#4729e0]/30 rounded-xl p-12 flex flex-col items-center justify-center bg-[#1c192b] hover:border-[#4729e0] transition-colors cursor-pointer">
+                  <div className="border-2 border-dashed border-[#4729e0]/30 rounded-xl p-12 flex flex-col items-center justify-center bg-[#1c192b] hover:border-[#4729e0] transition-colors cursor-pointer relative">
                     <Upload className="w-12 h-12 text-[#4729e0] mb-4" />
-                    <p className="font-bold text-lg mb-1 text-white">Drag & drop files</p>
-                    <p className="text-slate-400 text-sm mb-4">
-                      Maximum size 20MB. Supports .pdf, .docx, .txt
-                    </p>
-                    <button className="px-6 py-2 bg-[#141121] border border-[#4729e0]/30 rounded-lg text-sm font-bold shadow-sm hover:bg-[#4729e0]/10 transition-colors">
-                      Browse Files
+                    <p className="font-bold text-lg mb-1 text-white">Upload Requirement Document</p>
+                    <p className="text-slate-400 text-sm mb-4">Demo supports .txt files</p>
+                    
+                    <input
+                      type="file"
+                      accept=".txt"
+                      onChange={handleFileUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    
+                    <button className="px-6 py-2 bg-[#4729e0] rounded-lg text-sm font-bold text-white shadow-lg pointer-events-none">
+                      Select File from PC
                     </button>
                   </div>
                 )}
@@ -209,20 +207,20 @@ export default function InputPage({ onExtract }) {
           {/* Action Button */}
           <div className="flex flex-col items-center justify-center py-4">
             <button 
-      className="..." 
-      onClick={() => onExtract(text, sourceType)} // Fixed syntax
-    >
-      <Sparkles className="w-5 h-5 fill-current" />
-      Extract Requirements
-      <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-    </button>
+              onClick={() => onExtract(text, sourceType)}
+              className="flex items-center gap-3 px-8 py-4 bg-[#4729e0] rounded-xl font-bold text-white shadow-xl shadow-[#4729e0]/20 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+            >
+              <Sparkles className="w-5 h-5 fill-current" />
+              Extract Requirements
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
             <p className="mt-4 text-xs text-slate-400 flex items-center gap-1">
               <Zap className="w-[14px] h-[14px]" />
-              AI Engine: spaCy Large Model v3.5
+              AI Engine Ready
             </p>
           </div>
 
-          {/* Pipeline Visualization */}
+          {/* Pipeline */}
           <section className="mt-12 pt-8 border-t border-[#4729e0]/10">
             <h4 className="text-center text-xs font-black uppercase tracking-widest text-slate-500 mb-8">
               Internal Extraction Pipeline
@@ -236,17 +234,8 @@ export default function InputPage({ onExtract }) {
               <ArrowRight className="w-6 h-6 text-[#4729e0]/20 hidden md:block" />
               <PipelineStep icon={ListChecks} label="Structured Output" isLast={true} />
             </div>
-            <div className="mt-6 p-4 rounded-lg bg-[#4729e0]/5 border border-[#4729e0]/10 max-w-2xl mx-auto">
-              <p className="text-[11px] font-mono text-[#4729e0]/80 leading-relaxed text-center">
-                NER (Named Entity Recognition) identifying [ORG], [PERSON], [GPE], and [PRODUCT]
-                tokens to auto-map stakeholder groups and system constraints.
-              </p>
-            </div>
           </section>
         </div>
-        
-        {/* Footer Spacer */}
-        <div className="h-12"></div>
       </main>
     </div>
   );
