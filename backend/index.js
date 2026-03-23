@@ -41,12 +41,20 @@ app.post('/api/jira-sync', async (req, res) => {
         const issuesCreated = [];
 
         for (const reqText of requirements) {
-          const cleanSummary = reqText.replace(/[\r\n]+/gm, " ").trim();
+            // 1. Clean the text (remove newlines)
+            let cleanSummary = reqText.replace(/[\r\n]+/gm, " ").trim();
+
+            // 2. TRUNCATE: If it's longer than 250 chars, cut it and add "..."
+            if (cleanSummary.length > 250) {
+                cleanSummary = cleanSummary.substring(0, 247) + "...";
+            }
+
             const jiraIssue = {
                 fields: {
                     project: { key: projectKey || 'KAN' },
-                    summary: cleanSummary, // Using the actual requirement as the title
-                    description: "Created via ReqMind AI Extraction",
+                    summary: cleanSummary, 
+                    // 3. PRO TIP: Put the FULL text in the description so data isn't lost
+                    description: reqText, 
                     issuetype: { name: 'Task' }
                 }
             };

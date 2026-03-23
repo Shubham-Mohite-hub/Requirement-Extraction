@@ -4,6 +4,7 @@ import InputPage from "../components/input";
 import RequirementsPanel from "../components/output";
 import HistoryPage from "./History"; 
 import PRDView from "../components/PRDview";
+import KnowledgeGraph from "../components/KnowledgeGraph";
 
 export default function App() {
   const [showRequirements, setShowRequirements] = useState(false);
@@ -105,6 +106,18 @@ if (currentView === "prd") {
     </div>
   );
 }
+
+{currentView === "graph" && (
+  analysisData ? (
+    <div className="h-[calc(100vh-20px)] p-4">
+      <KnowledgeGraph data={analysisData} />
+    </div>
+  ) : (
+    <div className="flex items-center justify-center h-full text-slate-500">
+      Please extract requirements first to view the Knowledge Map.
+    </div>
+  )
+)}
 
           return <InputPage onExtract={handleExtract} />;
         })()}

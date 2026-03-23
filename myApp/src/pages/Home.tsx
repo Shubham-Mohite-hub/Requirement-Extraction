@@ -20,8 +20,14 @@ import {
   Users,
 } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+// 1. Import Clerk Hooks and Components
+import { useAuth, SignInButton, UserButton } from "@clerk/clerk-react";
+
 export default function App() {
   const navigate = useNavigate();
+  // 2. Access the authentication state
+  const { isSignedIn } = useAuth();
+
   const handleAnalysis = () => {
     navigate("/workplace");
   };
@@ -41,23 +47,38 @@ export default function App() {
             </div>
           </div>
           <nav className="hidden items-center gap-8 md:flex">
-            <a href="#" className="text-sm font-medium text-slate-300 transition-colors hover:text-primary">
-              Features
-            </a>
-            <a href="#" className="text-sm font-medium text-slate-300 transition-colors hover:text-primary">
-              Solutions
-            </a>
-            <a href="#" className="text-sm font-medium text-slate-300 transition-colors hover:text-primary">
-              Demo
-            </a>
+            <a href="#" className="text-sm font-medium text-slate-300 transition-colors hover:text-primary">Features</a>
+            <a href="#" className="text-sm font-medium text-slate-300 transition-colors hover:text-primary">Solutions</a>
+            <a href="#" className="text-sm font-medium text-slate-300 transition-colors hover:text-primary">Demo</a>
           </nav>
+
           <div className="flex items-center gap-3">
-            <button className="hidden h-10 items-center justify-center rounded-lg bg-primary/10 px-5 text-sm font-semibold text-white transition-all hover:bg-primary/20 sm:flex">
-              Login
-            </button>
-            <button className="flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:opacity-90"  onClick={handleAnalysis}>
-              Start Analysis
-            </button>
+            {/* 3. Conditional Header Buttons */}
+            {!isSignedIn ? (
+              <>
+                <SignInButton mode="modal">
+                  <button className="hidden h-10 items-center justify-center rounded-lg bg-primary/10 px-5 text-sm font-semibold text-white transition-all hover:bg-primary/20 sm:flex">
+                    Login
+                  </button>
+                </SignInButton>
+                <SignInButton mode="modal">
+                  <button className="flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:opacity-90">
+                    Start Analysis
+                  </button>
+                </SignInButton>
+              </>
+            ) : (
+              <>
+                <button 
+                  className="flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:opacity-90"
+                  onClick={handleAnalysis}
+                >
+                  Start Analysis
+                </button>
+                {/* 4. Show User Profile when logged in */}
+                <UserButton afterSignOutUrl="/" />
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -67,23 +88,30 @@ export default function App() {
         <section className="relative overflow-hidden px-6 pb-16 pt-20">
           <div className="pointer-events-none absolute left-1/2 top-0 h-[600px] w-full -translate-x-1/2 bg-gradient-to-b from-primary/10 to-transparent"></div>
           <div className="relative z-10 mx-auto max-w-5xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
-              </span>
-              Next-Gen Business Analysis
-            </div>
+            {/* ... badges and h1 ... */}
             <h1 className="mb-8 text-5xl font-black leading-[1.1] tracking-tight text-white md:text-7xl">
-              Turn <span className="text-primary">messy conversations</span> into structured product requirements
+               Turn <span className="text-primary">messy conversations</span> into structured product requirements
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-400 md:text-xl">
-              Automatically extract functional requirements, stakeholders, and decisions from your team's communication.
+               Automatically extract functional requirements, stakeholders, and decisions from your team's communication.
             </p>
+            
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <button className="w-full rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-xl shadow-primary/30 transition-transform hover:scale-[1.02] sm:w-auto" onClick={handleAnalysis}>
-                Start Analysis
-              </button>
+              {/* 5. Main Hero Buttons logic */}
+              {!isSignedIn ? (
+                <SignInButton mode="modal">
+                  <button className="w-full rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-xl shadow-primary/30 transition-transform hover:scale-[1.02] sm:w-auto">
+                    Start Analysis
+                  </button>
+                </SignInButton>
+              ) : (
+                <button 
+                  className="w-full rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-xl shadow-primary/30 transition-transform hover:scale-[1.02] sm:w-auto"
+                  onClick={handleAnalysis}
+                >
+                  Start Analysis
+                </button>
+              )}
               <button className="w-full rounded-xl border border-primary/20 bg-primary/10 px-8 py-4 text-lg font-bold text-white transition-all hover:bg-primary/20 sm:w-auto">
                 View Demo
               </button>

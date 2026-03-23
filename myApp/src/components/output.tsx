@@ -124,11 +124,59 @@ export default function RequirementsPanel({ data }: { data: any }) {
 
   const downloadPDF = () => {
     const doc = new jsPDF();
+    const { analysis_details, metadata, predicted_category } = data;
+
+    // 1. Header Styling
+    doc.setFillColor(71, 41, 224); // Your theme purple
+    doc.rect(0, 0, 210, 40, 'F');
+    
     doc.setFontSize(22);
-    doc.setTextColor(71, 41, 224);
-    doc.text("ReqMind AI - Requirements Report", 14, 22);
-    // ... (Your existing PDF code remains same)
-    doc.save(`${metadata?.project_id || "Report"}.pdf`);
+    doc.setTextColor(255, 255, 255);
+    doc.text("ReqMind AI: Requirements Report", 14, 25);
+    
+    doc.setFontSize(10);
+    doc.text(`Project ID: ${metadata?.project_id || "N/A"}`, 14, 34);
+    doc.text(`Category: ${predicted_category}`, 140, 34);
+
+    // 2. Functional Requirements Table
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text("1. Functional Requirements", 14, 55);
+
+    const functionalRows = analysis_details.functional_requirements?.map((req: string, i: number) => [
+      `FR-${i + 1}`,
+      req
+    ]) || [];
+
+    autoTable(doc, {
+      startY: 60,
+      head: [['ID', 'Requirement Description']],
+      body: functionalRows,
+      theme: 'striped',
+      headStyles: { fillColor: [71, 41, 224] },
+      margin: { left: 14, right: 14 }
+    });
+
+    // 3. Quality & Non-Functional
+    const finalY = (doc as any).lastAutoTable.finalY || 150;
+    doc.text("2. Quality Constraints", 14, finalY + 15);
+
+    const nonFunctionalRows = analysis_details.non_functional_requirements?.map((req: string, i: number) => [
+      `NFR-${i + 1}`,
+      req
+    ]) || [];
+
+    autoTable(doc, {
+      startY: finalY + 20,
+      head: [['ID', 'Constraint / Quality Attribute']],
+      body: nonFunctionalRows,
+      theme: 'grid',
+      headStyles: { fillColor: [100, 100, 100] },
+      margin: { left: 14, right: 14 }
+    });
+
+    // 4. Save
+    doc.save(`ReqMind_${metadata?.project_id || "Report"}.pdf`);
   };
 
   return (
@@ -199,7 +247,7 @@ export default function RequirementsPanel({ data }: { data: any }) {
                 }`}
               >
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : isSaved ? <Check className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                {isSaving ? "Saving..." : isSaved ? "Saved" : "Confirm & Save"}
+                {isSaving ? "Saving..." : isSaved ? "Saved to History" : "Confirm & Save"}
               </button>
             </div>
           </div>
