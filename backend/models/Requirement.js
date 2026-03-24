@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 
 const RequirementSchema = new mongoose.Schema({
+  // Link to the project and the specific Clerk User
   project_id: { type: String, required: true },
+  userId: { type: String, required: true }, // Add this!
+  
   source: { type: String, default: 'Email' },
   predicted_category: String,
   analysis_details: {
@@ -12,7 +15,7 @@ const RequirementSchema = new mongoose.Schema({
     timelines: [String],
     priority: [String]
   },
-  raw_text: String, // Storing the original text is useful for debugging
+  raw_text: String, 
   createdAt: { type: Date, default: Date.now }
 });
 

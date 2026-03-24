@@ -2,58 +2,37 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const axios = require('axios'); // Ensure you ran: npm install axios
+const axios = require('axios');
 const analyzeRoute = require('./routes/analyze');
 
 const app = express();
 
-// --- 1. Mongoose Schema ---
-const analysisSchema = new mongoose.Schema({
-    project_id: { type: String, default: "UNKNOWN" },
-    predicted_category: String,
-    analysis_details: Object,
-    metadata: Object,
-    createdAt: { type: Date, default: Date.now }
-});
-const Analysis = mongoose.model('Analysis', analysisSchema);
-
-// --- 2. Middleware ---
+// --- 1. Middleware ---
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    // Added every possible port your frontend might be using
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
     credentials: true
 }));
 app.use(express.json());
 
-// --- 3. Jira Sync Route ---
+// --- 2. Jira Sync Route ---
 app.post('/api/jira-sync', async (req, res) => {
-  
     const { requirements, projectKey } = req.body;
-    
-    // Pulling secrets safely from .env
     const domain = process.env.JIRA_DOMAIN;
     const email = process.env.JIRA_EMAIL;
     const token = process.env.JIRA_API_TOKEN;
-    
-    // Auth Header (Base64)
     const auth = Buffer.from(`${email}:${token}`).toString('base64');
 
     try {
         const issuesCreated = [];
-
         for (const reqText of requirements) {
-            // 1. Clean the text (remove newlines)
             let cleanSummary = reqText.replace(/[\r\n]+/gm, " ").trim();
-
-            // 2. TRUNCATE: If it's longer than 250 chars, cut it and add "..."
-            if (cleanSummary.length > 250) {
-                cleanSummary = cleanSummary.substring(0, 247) + "...";
-            }
+            if (cleanSummary.length > 250) cleanSummary = cleanSummary.substring(0, 247) + "...";
 
             const jiraIssue = {
                 fields: {
                     project: { key: projectKey || 'KAN' },
                     summary: cleanSummary, 
-                    // 3. PRO TIP: Put the FULL text in the description so data isn't lost
                     description: reqText, 
                     issuetype: { name: 'Task' }
                 }
@@ -62,16 +41,10 @@ app.post('/api/jira-sync', async (req, res) => {
             const response = await axios.post(
                 `https://${domain}/rest/api/2/issue`,
                 jiraIssue,
-                { 
-                    headers: { 
-                        'Authorization': `Basic ${auth}`, 
-                        'Content-Type': 'application/json' 
-                    } 
-                }
+                { headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' } }
             );
             issuesCreated.push(response.data.key);
         }
-
         res.status(200).json({ success: true, issues: issuesCreated });
     } catch (error) {
         console.error("Jira Error:", error.response?.data || error.message);
@@ -79,26 +52,17 @@ app.post('/api/jira-sync', async (req, res) => {
     }
 });
 
-// --- 4. Database Save Route ---
-app.post('/api/save-analysis', async (req, res) => {
-    try {
-        const newRecord = new Analysis(req.body);
-        await newRecord.save();
-        res.status(200).json({ message: "Saved to MongoDB Atlas!" });
-    } catch (error) {
-        res.status(500).json({ error: "Database save failed" });
-    }
-});
-
-// --- 5. MongoDB Connection ---
+// --- 3. MongoDB Connection ---
 const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/reqsphere';
 mongoose.connect(mongoURI)
   .then(() => console.log(`✅ MongoDB Connected`))
   .catch(err => console.error("❌ MongoDB Error:", err.message));
 
-// --- 6. Routes & Port ---
-app.use('/api', analyzeRoute);
+// --- 4. Mounting the Analyze Route ---
+// This handles /api/projects, /api/analyze-requirements, and /api/history
+app.use('/api', analyzeRoute); 
+
 app.get('/', (req, res) => res.send('Backend Bridge Live'));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Running at http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Running at http://0.0.0.0:${PORT}`));

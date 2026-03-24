@@ -20,16 +20,18 @@ import {
   Users,
 } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
-// 1. Import Clerk Hooks and Components
+// Import Clerk Hooks and Components
 import { useAuth, SignInButton, UserButton } from "@clerk/clerk-react";
 
-export default function App() {
+export default function Home() {
   const navigate = useNavigate();
-  // 2. Access the authentication state
   const { isSignedIn } = useAuth();
 
+  // Centralized navigation logic
   const handleAnalysis = () => {
-    navigate("/workplace");
+    if (isSignedIn) {
+      navigate("/select-project");
+    }
   };
 
   return (
@@ -53,7 +55,6 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* 3. Conditional Header Buttons */}
             {!isSignedIn ? (
               <>
                 <SignInButton mode="modal">
@@ -73,9 +74,8 @@ export default function App() {
                   className="flex h-10 items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-all hover:opacity-90"
                   onClick={handleAnalysis}
                 >
-                  Start Analysis
+                  My Projects
                 </button>
-                {/* 4. Show User Profile when logged in */}
                 <UserButton afterSignOutUrl="/" />
               </>
             )}
@@ -88,16 +88,21 @@ export default function App() {
         <section className="relative overflow-hidden px-6 pb-16 pt-20">
           <div className="pointer-events-none absolute left-1/2 top-0 h-[600px] w-full -translate-x-1/2 bg-gradient-to-b from-primary/10 to-transparent"></div>
           <div className="relative z-10 mx-auto max-w-5xl text-center">
-            {/* ... badges and h1 ... */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
+              </span>
+              Next-Gen Business Analysis
+            </div>
             <h1 className="mb-8 text-5xl font-black leading-[1.1] tracking-tight text-white md:text-7xl">
-               Turn <span className="text-primary">messy conversations</span> into structured product requirements
+              Turn <span className="text-primary">messy conversations</span> into structured product requirements
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-slate-400 md:text-xl">
-               Automatically extract functional requirements, stakeholders, and decisions from your team's communication.
+              Automatically extract functional requirements, stakeholders, and decisions from your team's communication.
             </p>
             
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              {/* 5. Main Hero Buttons logic */}
               {!isSignedIn ? (
                 <SignInButton mode="modal">
                   <button className="w-full rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-xl shadow-primary/30 transition-transform hover:scale-[1.02] sm:w-auto">
@@ -109,7 +114,7 @@ export default function App() {
                   className="w-full rounded-xl bg-primary px-8 py-4 text-lg font-bold text-white shadow-xl shadow-primary/30 transition-transform hover:scale-[1.02] sm:w-auto"
                   onClick={handleAnalysis}
                 >
-                  Start Analysis
+                  Go to Projects
                 </button>
               )}
               <button className="w-full rounded-xl border border-primary/20 bg-primary/10 px-8 py-4 text-lg font-bold text-white transition-all hover:bg-primary/20 sm:w-auto">
@@ -122,7 +127,6 @@ export default function App() {
           <div className="relative mx-auto mt-20 max-w-6xl">
             <div className="rounded-3xl border border-primary/20 bg-slate-900/50 p-8 shadow-2xl backdrop-blur-sm md:p-12">
               <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-11">
-                {/* Inputs */}
                 <div className="grid grid-cols-2 gap-4 lg:col-span-3">
                   <div className="group flex flex-col items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/50 p-4 text-center transition-all">
                     <Mail className="size-8 text-primary" />
@@ -142,12 +146,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Arrow 1 */}
                 <div className="flex justify-center rotate-90 lg:col-span-1 lg:rotate-0">
                   <ArrowRight className="size-10 animate-pulse text-primary" />
                 </div>
 
-                {/* AI Core */}
                 <div className="flex justify-center lg:col-span-3">
                   <div className="relative">
                     <div className="absolute -inset-8 rounded-full bg-primary/20 blur-2xl"></div>
@@ -162,12 +164,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Arrow 2 */}
                 <div className="flex justify-center rotate-90 lg:col-span-1 lg:rotate-0">
                   <ArrowRight className="size-10 animate-pulse text-primary" />
                 </div>
 
-                {/* Outputs */}
                 <div className="lg:col-span-3">
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 rounded-lg border-l-4 border-primary bg-primary/5 p-3">
@@ -287,9 +287,20 @@ export default function App() {
               Join hundreds of product teams who have replaced hours of manual documentation with ReqMind AI's automated intelligence.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <button className="w-full rounded-xl bg-primary px-10 py-4 text-lg font-bold text-white shadow-2xl shadow-primary/40 transition-transform hover:scale-105 sm:w-auto"  onClick={handleAnalysis}>
-                Start Analysis
-              </button>
+              {!isSignedIn ? (
+                <SignInButton mode="modal">
+                  <button className="w-full rounded-xl bg-primary px-10 py-4 text-lg font-bold text-white shadow-2xl shadow-primary/40 transition-transform hover:scale-105 sm:w-auto">
+                    Start Analysis
+                  </button>
+                </SignInButton>
+              ) : (
+                <button 
+                  className="w-full rounded-xl bg-primary px-10 py-4 text-lg font-bold text-white shadow-2xl shadow-primary/40 transition-transform hover:scale-105 sm:w-auto"
+                  onClick={handleAnalysis}
+                >
+                  Open My Projects
+                </button>
+              )}
               <button className="w-full rounded-xl border border-primary/40 bg-transparent px-10 py-4 text-lg font-bold text-white transition-all hover:bg-primary/10 sm:w-auto">
                 Contact Sales
               </button>
@@ -314,7 +325,7 @@ export default function App() {
             <a href="#" className="transition-colors hover:text-primary">Support</a>
           </div>
           <div className="text-sm text-slate-600">
-            © 2024 ReqMind AI. All rights reserved.
+            © 2026 ReqMind AI. All rights reserved.
           </div>
         </div>
       </footer>

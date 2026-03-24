@@ -2,50 +2,114 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const Requirement = require('../models/Requirement');
+const Project = require('../models/Project');
 
-router.post('/analyze-requirements', async (req, res) => {
-  const { text, projectId } = req.body;
-
+// 1. ROUTE: Create a new project
+router.post('/projects', async (req, res) => {
   try {
-    // 1. Call the Python AI API
-    const mlResponse = await axios.post('http://localhost:8000/analyze', {
-      text: text
+    const { name, userId, description } = req.body;
+    const newProject = new Project({
+      name,
+      userId,
+      description: description || "Requirement Analysis Workspace"
+    });
+    const savedProject = await newProject.save();
+    res.status(201).json(savedProject);
+  } catch (error) {
+    console.error("Project Creation Error:", error);
+    res.status(500).json({ error: "Could not create project" });
+  }
+});
+
+// ROUTE: Confirm & Save button logic
+router.post('/save-analysis', async (req, res) => {
+  try {
+    const { project_id, userId, analysis_details, predicted_category, raw_text } = req.body;
+
+    const newRecord = new Requirement({
+      project_id,
+      userId,
+      predicted_category,
+      analysis_details,
+      raw_text,
+      source: req.body.source || 'Manual Save'
     });
 
+    const saved = await newRecord.save();
+    
+    // --- CLEANED LOG ---
+    console.log("✅ Analysis Saved Successfully"); 
+    
+    res.status(200).json({ message: "Analysis saved to project history!", id: saved._id });
+  } catch (error) {
+    console.error("❌ Save Error:", error.message);
+    res.status(500).json({ error: "Failed to save analysis", details: error.message });
+  }
+});
+
+// 2. ROUTE: Get all projects for a specific user
+router.get('/projects/:userId', async (req, res) => {
+  try {
+    const projects = await Project.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.status(200).json(projects);
+  } catch (error) {
+    res.status(500).json({ error: "Could not fetch projects" });
+  }
+});
+
+router.post('/analyze-requirements', async (req, res) => {
+  // --- REMOVED: console.log("Incoming Data:", req.body); ---
+  // This was the one causing the giant wall of text.
+  
+  const { text, projectId, userId } = req.body;
+
+  if (!projectId || !userId) {
+    return res.status(400).json({ error: "Missing Project ID or User ID context." });
+  }
+
+  try {
+    const mlResponse = await axios.post('http://localhost:8000/analyze', { text: text });
     const mlData = mlResponse.data;
 
-    // 2. Map the Python JSON to our MongoDB Model
     const newRequirement = new Requirement({
-      project_id: projectId || mlData.metadata.project_id,
-      source: mlData.metadata.source,
+      project_id: projectId,
+      userId: userId,
+      source: mlData.metadata?.source || 'Manual Input',
       predicted_category: mlData.predicted_category,
       analysis_details: {
-        functional_requirements: mlData.analysis_details["Functional Requirements"],
-        non_functional_requirements: mlData.analysis_details["Non Functional Requirements"],
-        stakeholders: mlData.analysis_details["Stakeholders"],
-        decisions: mlData.analysis_details["Decisions"],
-        timelines: mlData.analysis_details["Timelines"],
-        priority: mlData.analysis_details["Feature Priority"]
+        functional_requirements: mlData.analysis_details["Functional Requirements"] || [],
+        non_functional_requirements: mlData.analysis_details["Non Functional Requirements"] || [],
+        stakeholders: mlData.analysis_details["Stakeholders"] || [],
+        decisions: mlData.analysis_details["Decisions"] || [],
+        timelines: mlData.analysis_details["Timelines"] || [],
+        priority: mlData.analysis_details["Feature Priority"] || []
       },
       raw_text: text
     });
 
-    // 3. Save it
     const savedData = await newRequirement.save();
+    
+    // Simple log to know it worked without the text dump
+    console.log("🚀 AI Analysis complete and saved.");
 
-    // 4. Send it back to the React frontend
     res.status(200).json(savedData);
-
   } catch (error) {
     console.error("Bridge Error:", error.message);
-    res.status(500).json({ error: "ML Server not responding. Is main_api.py running?" });
+    res.status(500).json({ 
+      error: "AI Extraction Failed", 
+      message: error.message
+    });
   }
 });
 
-router.get('/history', async (req, res) => {
+router.get('/history/:projectId/:userId', async (req, res) => {
   try {
-    const Requirement = require('../models/Requirement'); // Ensure the path is correct
-    const history = await Requirement.find().sort({ createdAt: -1 }); // Newest first
+    const { projectId, userId } = req.params;
+    const history = await Requirement.find({ 
+      project_id: projectId, 
+      userId: userId 
+    }).sort({ createdAt: -1 });
+    
     res.json(history);
   } catch (error) {
     res.status(500).json({ message: "Error fetching history", error: error.message });
