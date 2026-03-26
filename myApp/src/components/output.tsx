@@ -220,7 +220,7 @@ export default function RequirementsPanel({ data, setView, projectId, userId }: 
             <section>
               <div className="flex items-center gap-2 mb-4">
                 <Gauge className="w-5 h-5 text-[#4729e0]" />
-                <h3 className="text-lg font-bold text-white">Quality Constraints</h3>
+                <h3 className="text-lg font-bold text-white">Non Functional</h3>
               </div>
               <div className="grid gap-3">
                 {analysis_details.non_functional_requirements?.map((req: string, i: number) => (
